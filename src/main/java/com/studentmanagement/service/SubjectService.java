@@ -1,9 +1,10 @@
-// File: src/main/java/com/studentmanagement/service/SubjectService.java
 package com.studentmanagement.service;
 
 import com.studentmanagement.dto.request.SubjectRequest;
+import com.studentmanagement.dto.response.PageResponse;
 import com.studentmanagement.dto.response.SubjectResponse;
 import com.studentmanagement.entity.Subject;
+import com.studentmanagement.exception.BusinessException;
 import com.studentmanagement.exception.ResourceNotFoundException;
 import com.studentmanagement.repository.SubjectRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -25,6 +26,15 @@ public class SubjectService {
                 .collect(Collectors.toList());
     }
 
+    public PageResponse<SubjectResponse> search(String keyword, int page, int size) {
+        String kw = keyword == null ? "" : keyword;
+        List<SubjectResponse> content = subjectRepository.findByKeyword(kw, page, size).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+        long total = subjectRepository.countByKeyword(kw);
+        return new PageResponse<>(content, page, size, total);
+    }
+
     public SubjectResponse getById(Long id) {
         Subject entity = subjectRepository.findByIdOptional(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy môn học với ID: " + id));
@@ -33,6 +43,10 @@ public class SubjectService {
 
     @Transactional
     public SubjectResponse create(SubjectRequest request) {
+        if (subjectRepository.existsBySubjectCode(request.subjectCode)) {
+            throw new BusinessException("Mã môn học đã tồn tại: " + request.subjectCode);
+        }
+
         Subject entity = new Subject();
         entity.subjectCode = request.subjectCode;
         entity.subjectName = request.subjectName;
@@ -47,6 +61,10 @@ public class SubjectService {
         Subject entity = subjectRepository.findByIdOptional(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy môn học với ID: " + id));
 
+        if (subjectRepository.existsBySubjectCodeAndIdNot(request.subjectCode, id)) {
+            throw new BusinessException("Mã môn học đã tồn tại: " + request.subjectCode);
+        }
+
         entity.subjectCode = request.subjectCode;
         entity.subjectName = request.subjectName;
         entity.credits = request.credits;
@@ -58,6 +76,16 @@ public class SubjectService {
     public void delete(Long id) {
         Subject entity = subjectRepository.findByIdOptional(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy môn học với ID: " + id));
+
+        long scoreCount = subjectRepository.getEntityManager()
+                .createQuery("SELECT COUNT(sc) FROM Score sc WHERE sc.subject.id = :id", Long.class)
+                .setParameter("id", id)
+                .getSingleResult();
+
+        if (scoreCount > 0) {
+            throw new BusinessException("Không thể xóa môn học đang có " + scoreCount + " điểm số liên quan.");
+        }
+
         subjectRepository.delete(entity);
     }
 

@@ -1,9 +1,9 @@
-// File: src/main/java/com/studentmanagement/resource/ClassResource.java
 package com.studentmanagement.resource;
 
 import com.studentmanagement.dto.request.ClassRequest;
 import com.studentmanagement.dto.response.ApiResponse;
 import com.studentmanagement.dto.response.ClassResponse;
+import com.studentmanagement.dto.response.PageResponse;
 import com.studentmanagement.service.ClassService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -19,18 +19,28 @@ import java.util.List;
 @Path("/api/classes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RolesAllowed("ADMIN")
-@Tag(name = "Class Management", description = "Quản lý thông tin lớp học (Chỉ dành cho ADMIN)")
+@RolesAllowed({"ADMIN", "TEACHER"})
+@Tag(name = "Class Management", description = "Quản lý thông tin lớp học")
 public class ClassResource {
 
     @Inject
     ClassService classService;
 
     @GET
-    @Operation(summary = "Lấy danh sách tất cả lớp học")
+    @Operation(summary = "Lấy danh sách tất cả lớp học (không phân trang)")
     @APIResponse(responseCode = "200", description = "Thành công")
     public ApiResponse<List<ClassResponse>> getAll() {
         return ApiResponse.success(classService.getAll());
+    }
+
+    @GET
+    @Path("/page")
+    @Operation(summary = "Lấy danh sách lớp học có phân trang")
+    @APIResponse(responseCode = "200", description = "Thành công")
+    public ApiResponse<PageResponse<ClassResponse>> getPage(
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("10") int size) {
+        return ApiResponse.success(classService.getPage(page, size));
     }
 
     @GET
@@ -43,14 +53,17 @@ public class ClassResource {
     }
 
     @POST
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Tạo mới một lớp học")
     @APIResponse(responseCode = "200", description = "Tạo mới thành công")
+    @APIResponse(responseCode = "400", description = "Mã lớp đã tồn tại hoặc dữ liệu không hợp lệ")
     public ApiResponse<ClassResponse> create(@Valid ClassRequest request) {
         return ApiResponse.success("Tạo lớp học thành công", classService.create(request));
     }
 
     @PUT
     @Path("/{id}")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Cập nhật thông tin lớp học")
     @APIResponse(responseCode = "200", description = "Cập nhật thành công")
     public ApiResponse<ClassResponse> update(@PathParam("id") Long id, @Valid ClassRequest request) {
@@ -59,8 +72,10 @@ public class ClassResource {
 
     @DELETE
     @Path("/{id}")
-    @Operation(summary = "Xóa lớp học theo ID")
+    @RolesAllowed("ADMIN")
+    @Operation(summary = "Xóa lớp học theo ID (chỉ khi không còn sinh viên)")
     @APIResponse(responseCode = "200", description = "Xóa thành công")
+    @APIResponse(responseCode = "400", description = "Lớp học vẫn còn sinh viên")
     public ApiResponse<Void> delete(@PathParam("id") Long id) {
         classService.delete(id);
         return ApiResponse.success("Xóa lớp học thành công", null);
