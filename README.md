@@ -1,3 +1,55 @@
+# Student Management System - Backend API
+
+Hệ thống backend quản lý sinh viên được xây dựng trên nền tảng **Quarkus** và **Java 17**, áp dụng kiến trúc **Monolithic RESTful API**. Hệ thống hỗ trợ đầy đủ các tính năng quản lý thực tế, phân quyền bảo mật bằng JWT, phân trang, tìm kiếm nâng cao và tích hợp tài liệu API tự động.
+
+---
+
+## 🛠 Công Nghệ Sử Dụng
+
+* **Language:** Java 17
+* **Framework:** Quarkus (Đảm bảo hiệu năng cao, khởi động nhanh)
+* **Database:** MySQL
+* **ORM:** Hibernate ORM với Panache (Active Record / Repository Pattern)
+* **Build Tool:** Maven
+* **Security:** Quarkus SmallRye JWT (Authentication & Authorization)
+* **Validation:** Jakarta Validation (Kiểm tra dữ liệu đầu vào)
+* **Documentation:** Swagger UI / OpenAPI 3
+* **Testing:** Postman & Swagger UI
+
+---
+
+## 📂 Cấu Trúc Thư Mục Dự Án (Project Structure)
+
+Dự án áp dụng kiến trúc phân lớp (**Layered Architecture**) chuẩn, tách biệt rõ ràng giữa các phân hệ quản lý:
+
+```text
+student-management-system/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── management/
+│   │   │           ├── common/                  # Cấu hình chung, Exception toàn cục, Response chuẩn
+│   │   │           │   ├── exception/
+│   │   │           │   └── payload/
+│   │   │           ├── config/                  # Cấu hình JWT, Security, OpenAPI
+│   │   │           └── modules/                 # Các module nghiệp vụ của hệ thống
+│   │   │               ├── auth/                # Module Authentication & Authorization
+│   │   │               ├── student/             # Module Quản lý Sinh viên
+│   │   │               ├── classroom/           # Module Quản lý Lớp học
+│   │   │               ├── subject/             # Module Quản lý Môn học
+│   │   │               └── score/               # Module Quản lý Điểm số
+│   │   │                   ├── entity/          # Các thực thể Database (Entities)
+│   │   │                   ├── dto/             # Data Transfer Objects (Request/Response)
+│   │   │                   ├── repository/      # Tầng giao tiếp DB (PanacheRepository)
+│   │   │                   ├── service/         # Tầng xử lý logic nghiệp vụ (Service Layer)
+│   │   │                   └── resource/        # Tầng API endpoints (Controllers)
+│   │   └── resources/
+│   │       ├── application.properties           # File cấu hình chính của Quarkus
+│   │       └── import.sql                       # Script seed dữ liệu mẫu tự động khi khởi chạy
+├── pom.xml                                      # Quản lý dependency Maven
+└── README.md
+
 # student-management-system
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
