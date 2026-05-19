@@ -39,9 +39,10 @@ public class AuthService {
             throw new BusinessException("Tài khoản đã bị khóa");
         }
 
-        String token = tokenUtils.generateToken(user.username, user.role.name());
+        String role = User.normalizeRole(user.role);
+        String token = tokenUtils.generateToken(user.username, role);
 
-        return new AuthResponse(token, tokenUtils.getExpiry(), user.username, user.role.name());
+        return new AuthResponse(token, tokenUtils.getExpiry(), user.username, role);
     }
 
     @Transactional
@@ -53,7 +54,8 @@ public class AuthService {
         User user = new User();
         user.username = request.username;
         user.password = BcryptUtil.bcryptHash(request.password);
-        user.role = request.role;
+        user.email = request.email;
+        user.role = request.role.name();
         user.active = true;
 
         if (request.studentId != null) {

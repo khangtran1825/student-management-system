@@ -62,9 +62,9 @@ INSERT INTO scores (student_id, subject_id, midterm_score, final_score) VALUES
 (10, 8, 7.0, 7.5);
 
 -- Users (passwords are BCrypt hashed - plain: admin123, teacher123, student123)
-INSERT INTO users (username, password, role, student_id) VALUES
-('admin',    '$2a$12$LQV3c1yqBWVHxkd0LHAkCOYz6TtxMQyCFfcbH6wyxfKuBbJxVJJmW', 'ADMIN',   NULL),
-('teacher1', '$2a$12$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWu', 'TEACHER', NULL),
-('sv001',    '$2a$12$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWu', 'STUDENT', 1),
-('sv002',    '$2a$12$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWu', 'STUDENT', 2);
+INSERT INTO users (username, password, email, role, student_id) VALUES
+('admin',    '$2a$12$LQV3c1yqBWVHxkd0LHAkCOYz6TtxMQyCFfcbH6wyxfKuBbJxVJJmW', 'admin@school.local',    'ADMIN',   NULL),
+('teacher1', '$2a$12$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWu', 'teacher1@school.local', 'TEACHER', NULL),
+('sv001',    '$2a$12$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWu', 'sv001@school.local',     'STUDENT', 1),
+('sv002',    '$2a$12$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWu', 'sv002@school.local',     'STUDENT', 2);
 -- Passwords: admin -> admin123 | teacher1 -> teacher123 | sv001,sv002 -> student123
