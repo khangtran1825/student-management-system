@@ -25,6 +25,7 @@ public class AuthResource {
     @Inject
     AuthService authService;
 
+    @PermitAll
     @POST
     @Path("/login")
     @Operation(summary = "Đăng nhập hệ thống", description = "Trả về JWT Token nếu thông tin chính xác")
