@@ -4,33 +4,33 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "classes")
-public class ClassEntity extends PanacheEntityBase {
+@Table(name = "academic_years")
+public class AcademicYear extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
     @NotBlank
-    @Size(max = 20)
-    @Column(name = "class_code", nullable = false, unique = true, length = 20)
-    public String classCode;
+    @Size(max = 50)
+    @Column(name = "name", nullable = false, unique = true, length = 50)
+    public String name;
 
-    @NotBlank
-    @Size(max = 100)
-    @Column(name = "class_name", nullable = false, length = 100)
-    public String className;
+    @NotNull
+    @Column(name = "start_date", nullable = false)
+    public LocalDate startDate;
 
-    @NotBlank
-    @Size(max = 100)
-    @Column(name = "major", nullable = false, length = 100)
-    public String major;
+    @NotNull
+    @Column(name = "end_date", nullable = false)
+    public LocalDate endDate;
 
     @Column(name = "created_at", updatable = false)
     public LocalDateTime createdAt;
@@ -38,9 +38,9 @@ public class ClassEntity extends PanacheEntityBase {
     @Column(name = "updated_at")
     public LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "classEntity", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "academicYear", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore
-    public List<Student> students;
+    public List<Semester> semesters;
 
     @PrePersist
     protected void onCreate() {

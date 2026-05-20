@@ -23,10 +23,15 @@ public class User extends PanacheEntityBase {
     @Column(name = "password", nullable = false, length = 255)
     public String password;
 
+    @NotBlank
+    @Email
+    @Size(max = 100)
+    @Column(name = "email", nullable = false, unique = true, length = 100)
+    public String email;
+
     @NotNull
-    @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
-    public Role role;
+    public String role;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
@@ -50,6 +55,18 @@ public class User extends PanacheEntityBase {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public static String normalizeRole(String role) {
+        if (role == null) {
+            return null;
+        }
+
+        String normalized = role.trim().toUpperCase();
+        if (normalized.startsWith("ROLE_")) {
+            normalized = normalized.substring(5);
+        }
+        return normalized;
     }
 
     public enum Role {

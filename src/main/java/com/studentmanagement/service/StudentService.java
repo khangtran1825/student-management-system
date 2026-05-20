@@ -6,10 +6,13 @@ import com.studentmanagement.dto.response.PageResponse;
 import com.studentmanagement.dto.response.StudentResponse;
 import com.studentmanagement.entity.ClassEntity;
 import com.studentmanagement.entity.Student;
+import com.studentmanagement.entity.User;
 import com.studentmanagement.exception.BusinessException;
 import com.studentmanagement.exception.ResourceNotFoundException;
 import com.studentmanagement.repository.ClassRepository;
 import com.studentmanagement.repository.StudentRepository;
+import com.studentmanagement.repository.UserRepository;
+import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -25,6 +28,9 @@ public class StudentService {
 
     @Inject
     ClassRepository classRepository;
+
+    @Inject
+    UserRepository userRepository;
 
     public StudentResponse getById(Long id) {
         Student entity = studentRepository.findByIdOptional(id)
@@ -55,6 +61,16 @@ public class StudentService {
         updateEntityFromRequest(entity, request, classEntity);
 
         studentRepository.persist(entity);
+
+        User user = new User();
+        user.username = request.studentCode;
+        user.password = BcryptUtil.bcryptHash(request.password);
+        user.email = request.email;
+        user.role = User.Role.STUDENT.name();
+        user.active = true;
+        user.student = entity;
+        userRepository.persist(user);
+
         return mapToResponse(entity);
     }
 
@@ -70,6 +86,14 @@ public class StudentService {
 
         updateEntityFromRequest(entity, request, classEntity);
 
+        userRepository.find("student", entity).firstResultOptional().ifPresent(user -> {
+            user.email = request.email;
+            if (request.password != null && !request.password.isEmpty()) {
+                user.password = BcryptUtil.bcryptHash(request.password);
+            }
+            userRepository.persist(user);
+        });
+
         return mapToResponse(entity);
     }
 
@@ -77,6 +101,11 @@ public class StudentService {
     public void delete(Long id) {
         Student entity = studentRepository.findByIdOptional(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sinh viên với ID: " + id));
+        
+        userRepository.find("student", entity).firstResultOptional().ifPresent(user -> {
+            userRepository.delete(user);
+        });
+
         studentRepository.delete(entity);
     }
 

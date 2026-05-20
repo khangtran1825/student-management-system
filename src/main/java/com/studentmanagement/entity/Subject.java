@@ -1,5 +1,6 @@
 package com.studentmanagement.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -37,6 +38,7 @@ public class Subject extends PanacheEntityBase {
     public LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
+    @JsonIgnore
     public List<Score> scores;
 
     @PrePersist

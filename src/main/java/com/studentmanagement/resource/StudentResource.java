@@ -1,4 +1,3 @@
-// File: src/main/java/com/studentmanagement/resource/StudentResource.java
 package com.studentmanagement.resource;
 
 import com.studentmanagement.dto.request.StudentRequest;

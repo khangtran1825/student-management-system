@@ -34,6 +34,26 @@ public class ScoreResource {
     UserRepository userRepository;
 
     @GET
+    @RolesAllowed({"ADMIN", "TEACHER", "STUDENT"})
+    @Operation(summary = "Lấy danh sách điểm số", description = "Admin/Teacher xem tất cả, Student chỉ xem điểm của mình nếu có studentId")
+    @APIResponse(responseCode = "200", description = "Thành công")
+    public ApiResponse<List<ScoreResponse>> getAll(
+            @QueryParam("studentId") Long studentId,
+            @QueryParam("subjectId") Long subjectId,
+            @QueryParam("semesterId") Long semesterId,
+            @Context SecurityContext sec) {
+        if (sec.isUserInRole("STUDENT")) {
+            String username = sec.getUserPrincipal().getName();
+            User user = userRepository.find("username", username).firstResult();
+            if (user == null || user.student == null) {
+                throw new BusinessException("Không tìm thấy sinh viên liên kết với tài khoản.");
+            }
+            studentId = user.student.id;
+        }
+        return ApiResponse.success(scoreService.getScores(studentId, subjectId, semesterId));
+    }
+
+    @GET
     @Path("/student/{studentId}")
     @RolesAllowed({"ADMIN", "TEACHER", "STUDENT"})
     @Operation(summary = "Xem điểm số theo mã ID sinh viên", description = "Sinh viên chỉ được truyền đúng ID của chính mình")

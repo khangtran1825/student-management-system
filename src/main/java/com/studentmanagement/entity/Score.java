@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "scores",
         uniqueConstraints = @UniqueConstraint(
-                name = "uq_student_subject",
-                columnNames = {"student_id", "subject_id"}
+                name = "uq_student_subject_semester",
+                columnNames = {"student_id", "subject_id", "semester_id"}
         )
 )
 public class Score extends PanacheEntityBase {
@@ -28,6 +28,10 @@ public class Score extends PanacheEntityBase {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "subject_id", nullable = false)
     public Subject subject;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "semester_id")
+    public Semester semester;
 
     @NotNull
     @DecimalMin("0.0") @DecimalMax("10.0")
