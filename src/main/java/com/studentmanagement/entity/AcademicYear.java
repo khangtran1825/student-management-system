@@ -1,5 +1,6 @@
 package com.studentmanagement.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -38,6 +39,7 @@ public class AcademicYear extends PanacheEntityBase {
     public LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "academicYear", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
     public List<Semester> semesters;
 
     @PrePersist

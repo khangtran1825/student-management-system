@@ -27,9 +27,9 @@ public class ExamService {
     SemesterRepository semesterRepository;
 
     public List<ExamResponse> getAll() {
-        return repository.findAll().stream()
+        return repository.listAll().stream()
                 .map(ExamResponse::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public ExamResponse getById(Long id) {

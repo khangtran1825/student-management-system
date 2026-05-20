@@ -25,9 +25,9 @@ public class SemesterService {
     AcademicYearRepository academicYearRepository;
 
     public List<SemesterResponse> getAll() {
-        return repository.findAll().stream()
-                .map(SemesterResponse::new)
-                .collect(Collectors.toList());
+    return repository.listAll().stream()
+        .map(SemesterResponse::new)
+        .toList();
     }
 
     public SemesterResponse getById(Long id) {

@@ -36,4 +36,8 @@ public class StudentRequest {
 
     @NotNull(message = "Class ID is required")
     public Long classId;
+
+    @NotBlank(message = "Password is required for user account creation")
+    @Size(min = 6, max = 50, message = "Password must be between 6 and 50 characters")
+    public String password;
 }

@@ -5,10 +5,12 @@ import com.studentmanagement.dto.request.ScoreRequest;
 import com.studentmanagement.dto.response.ScoreResponse;
 import com.studentmanagement.entity.Score;
 import com.studentmanagement.entity.Student;
+import com.studentmanagement.entity.Semester;
 import com.studentmanagement.entity.Subject;
 import com.studentmanagement.exception.BusinessException;
 import com.studentmanagement.exception.ResourceNotFoundException;
 import com.studentmanagement.repository.ScoreRepository;
+import com.studentmanagement.repository.SemesterRepository;
 import com.studentmanagement.repository.StudentRepository;
 import com.studentmanagement.repository.SubjectRepository;
 import io.quarkus.panache.common.Parameters;
@@ -32,11 +34,23 @@ public class ScoreService {
     @Inject
     SubjectRepository subjectRepository;
 
+    @Inject
+    SemesterRepository semesterRepository;
+
     public List<ScoreResponse> getScoresByStudentId(Long studentId) {
         if (studentRepository.findByIdOptional(studentId).isEmpty()) {
             throw new ResourceNotFoundException("Không tìm thấy sinh viên với ID: " + studentId);
         }
         return scoreRepository.list("student.id", studentId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<ScoreResponse> getScores(Long studentId, Long subjectId, Long semesterId) {
+        return scoreRepository.listAll().stream()
+                .filter(score -> studentId == null || (score.student != null && score.student.id.equals(studentId)))
+                .filter(score -> subjectId == null || (score.subject != null && score.subject.id.equals(subjectId)))
+                .filter(score -> semesterId == null || (score.semester != null && score.semester.id.equals(semesterId)))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -49,8 +63,16 @@ public class ScoreService {
         Subject subject = subjectRepository.findByIdOptional(request.subjectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy môn học với ID: " + request.subjectId));
 
-        long count = scoreRepository.count("student.id = :studentId and subject.id = :subjectId",
-                Parameters.with("studentId", request.studentId).and("subjectId", request.subjectId));
+        Semester semester = null;
+        if (request.semesterId != null) {
+            semester = semesterRepository.findByIdOptional(request.semesterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học kỳ với ID: " + request.semesterId));
+        }
+
+        long count = scoreRepository.count("student.id = :studentId and subject.id = :subjectId and semester.id = :semesterId",
+            Parameters.with("studentId", request.studentId)
+                .and("subjectId", request.subjectId)
+                .and("semesterId", request.semesterId));
         if (count > 0) {
             throw new BusinessException("Sinh viên đã có đầu điểm cho môn học này.");
         }
@@ -58,6 +80,7 @@ public class ScoreService {
         Score score = new Score();
         score.student = student;
         score.subject = subject;
+        score.semester = semester;
         score.midtermScore = request.midtermScore;
         score.finalScore = request.finalScore;
         score.calculateAverage();
@@ -77,9 +100,15 @@ public class ScoreService {
         Subject subject = subjectRepository.findByIdOptional(request.subjectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy môn học với ID: " + request.subjectId));
 
-        if (!score.student.id.equals(request.studentId) || !score.subject.id.equals(request.subjectId)) {
-            long count = scoreRepository.count("student.id = :studentId and subject.id = :subjectId and id != :id",
-                    Parameters.with("studentId", request.studentId).and("subjectId", request.subjectId).and("id", id));
+        Semester semester = null;
+        if (request.semesterId != null) {
+            semester = semesterRepository.findByIdOptional(request.semesterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học kỳ với ID: " + request.semesterId));
+        }
+
+        if (!score.student.id.equals(request.studentId) || !score.subject.id.equals(request.subjectId) || (score.semester != null ? !score.semester.id.equals(request.semesterId) : request.semesterId != null)) {
+            long count = scoreRepository.count("student.id = :studentId and subject.id = :subjectId and semester.id = :semesterId and id != :id",
+                Parameters.with("studentId", request.studentId).and("subjectId", request.subjectId).and("semesterId", request.semesterId).and("id", id));
             if (count > 0) {
                 throw new BusinessException("Cặp sinh viên và môn học này đã tồn tại ở bản ghi khác.");
             }
@@ -87,6 +116,7 @@ public class ScoreService {
 
         score.student = student;
         score.subject = subject;
+        score.semester = semester;
         score.midtermScore = request.midtermScore;
         score.finalScore = request.finalScore;
         score.calculateAverage();
@@ -110,6 +140,10 @@ public class ScoreService {
         response.subjectId = score.subject.id;
         response.subjectCode = score.subject.subjectCode;
         response.subjectName = score.subject.subjectName;
+        if (score.semester != null) {
+            response.semesterId = score.semester.id;
+            response.semesterName = score.semester.name;
+        }
         response.midtermScore = score.midtermScore;
         response.finalScore = score.finalScore;
 

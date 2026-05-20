@@ -106,4 +106,74 @@ public class ReportService {
             throw new RuntimeException("Error generating Excel", e);
         }
     }
+
+    public byte[] generateClassGradesExcel(Long classId) {
+        List<Score> scores = scoreRepository.list("student.classEntity.id", classId);
+
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Class Grades");
+
+            Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("Student Code");
+            header.createCell(1).setCellValue("Full Name");
+            header.createCell(2).setCellValue("Subject");
+            header.createCell(3).setCellValue("Midterm");
+            header.createCell(4).setCellValue("Final");
+            header.createCell(5).setCellValue("Average");
+
+            int rowNum = 1;
+            for (Score s : scores) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(s.student != null ? s.student.studentCode : "");
+                row.createCell(1).setCellValue(s.student != null ? s.student.fullName : "");
+                row.createCell(2).setCellValue(s.subject != null ? s.subject.subjectName : "");
+                row.createCell(3).setCellValue(s.midtermScore != null ? s.midtermScore.doubleValue() : 0.0);
+                row.createCell(4).setCellValue(s.finalScore != null ? s.finalScore.doubleValue() : 0.0);
+                row.createCell(5).setCellValue(s.averageScore != null ? s.averageScore.doubleValue() : 0.0);
+            }
+
+            workbook.write(baos);
+            return baos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Error generating class grades Excel", e);
+        }
+    }
+
+    public byte[] generateAttendanceReportPdf(Long classId, String startDateStr, String endDateStr) {
+        java.time.LocalDate start = startDateStr == null || startDateStr.isEmpty() ? java.time.LocalDate.MIN : java.time.LocalDate.parse(startDateStr);
+        java.time.LocalDate end = endDateStr == null || endDateStr.isEmpty() ? java.time.LocalDate.MAX : java.time.LocalDate.parse(endDateStr);
+
+        List<com.studentmanagement.entity.Attendance> attendances = new java.util.ArrayList<>();
+        // Query attendances for schedules belonging to the class within date range
+        attendances = jakarta.enterprise.inject.spi.CDI.current().select(com.studentmanagement.repository.AttendanceRepository.class).get()
+                .list("schedule.classEntity.id = ?1 and date >= ?2 and date <= ?3", classId, start, end);
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            document.add(new Paragraph("Attendance Report - Class " + classId));
+            document.add(new Paragraph("From: " + start.toString() + " To: " + end.toString()));
+            document.add(new Paragraph("\n"));
+
+            float[] columnWidths = {150F, 100F, 100F};
+            Table table = new Table(columnWidths);
+            table.addHeaderCell("Student");
+            table.addHeaderCell("Date");
+            table.addHeaderCell("Status");
+
+            for (com.studentmanagement.entity.Attendance a : attendances) {
+                table.addCell(a.student != null ? a.student.fullName : "");
+                table.addCell(a.date != null ? a.date.toString() : "");
+                table.addCell(a.status != null ? a.status.name() : "");
+            }
+
+            document.add(table);
+            document.close();
+            return baos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Error generating attendance PDF", e);
+        }
+    }
 }

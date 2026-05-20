@@ -27,9 +27,9 @@ public class ScheduleService {
     SubjectRepository subjectRepository;
 
     public List<ScheduleResponse> getAll() {
-        return repository.findAll().stream()
+        return repository.listAll().stream()
                 .map(ScheduleResponse::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public ScheduleResponse getById(Long id) {

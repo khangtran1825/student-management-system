@@ -24,10 +24,12 @@ public class AttendanceResource {
     AttendanceService service;
 
     @GET
-    @Operation(summary = "Lấy danh sách điểm danh")
+    @Operation(summary = "Lấy danh sách điểm danh", description = "Hỗ trợ lọc theo studentId và/hoặc scheduleId")
     @APIResponse(responseCode = "200", description = "Thành công")
-    public ApiResponse<List<AttendanceResponse>> getAll() {
-        return ApiResponse.success(service.getAll());
+    public ApiResponse<List<AttendanceResponse>> getAll(
+            @QueryParam("studentId") Long studentId,
+            @QueryParam("scheduleId") Long scheduleId) {
+        return ApiResponse.success(service.getAll(studentId, scheduleId));
     }
 
     @GET

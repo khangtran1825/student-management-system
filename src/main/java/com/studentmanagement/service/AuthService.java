@@ -42,7 +42,8 @@ public class AuthService {
         String role = User.normalizeRole(user.role);
         String token = tokenUtils.generateToken(user.username, role);
 
-        return new AuthResponse(token, tokenUtils.getExpiry(), user.username, role);
+        Long studentId = user.student != null ? user.student.id : null;
+        return new AuthResponse(token, tokenUtils.getExpiry(), user.username, role, studentId);
     }
 
     @Transactional

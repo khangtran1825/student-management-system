@@ -11,6 +11,8 @@ public class ScoreResponse {
     public Long subjectId;
     public String subjectCode;
     public String subjectName;
+    public Long semesterId;
+    public String semesterName;
     public BigDecimal midtermScore;
     public BigDecimal finalScore;
     public BigDecimal averageScore;

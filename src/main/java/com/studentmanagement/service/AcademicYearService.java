@@ -20,9 +20,9 @@ public class AcademicYearService {
     AcademicYearRepository repository;
 
     public List<AcademicYearResponse> getAll() {
-        return repository.findAll().stream()
-                .map(AcademicYearResponse::new)
-                .collect(Collectors.toList());
+    return repository.listAll().stream()
+        .map(AcademicYearResponse::new)
+        .toList();
     }
 
     public AcademicYearResponse getById(Long id) {

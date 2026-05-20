@@ -1,27 +1,20 @@
--- ==========================================
--- STUDENT MANAGEMENT SYSTEM - MIGRATION V2
--- ==========================================
+-- V2__add_semesters.sql
+-- Migration v2: add academic_years, semesters, schedules, exams, attendances and alter scores
 
-USE student_management;
-
--- ==========================================
 -- TABLE: academic_years
--- ==========================================
 CREATE TABLE IF NOT EXISTS academic_years (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name        VARCHAR(50)  NOT NULL UNIQUE, -- e.g. "2024-2025"
+    name        VARCHAR(50)  NOT NULL UNIQUE,
     start_date  DATE         NOT NULL,
     end_date    DATE         NOT NULL,
     created_at  DATETIME     DEFAULT CURRENT_TIMESTAMP,
     updated_at  DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==========================================
 -- TABLE: semesters
--- ==========================================
 CREATE TABLE IF NOT EXISTS semesters (
     id               BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name             VARCHAR(50)  NOT NULL, -- e.g. "Học kỳ 1"
+    name             VARCHAR(50)  NOT NULL,
     academic_year_id BIGINT       NOT NULL,
     start_date       DATE         NOT NULL,
     end_date         DATE         NOT NULL,
@@ -31,9 +24,7 @@ CREATE TABLE IF NOT EXISTS semesters (
     CONSTRAINT uq_semester_year UNIQUE (name, academic_year_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==========================================
 -- TABLE: schedules
--- ==========================================
 CREATE TABLE IF NOT EXISTS schedules (
     id           BIGINT AUTO_INCREMENT PRIMARY KEY,
     class_id     BIGINT       NOT NULL,
@@ -49,9 +40,7 @@ CREATE TABLE IF NOT EXISTS schedules (
     CONSTRAINT fk_schedule_subject FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==========================================
 -- TABLE: exams
--- ==========================================
 CREATE TABLE IF NOT EXISTS exams (
     id           BIGINT AUTO_INCREMENT PRIMARY KEY,
     subject_id   BIGINT       NOT NULL,
@@ -64,9 +53,7 @@ CREATE TABLE IF NOT EXISTS exams (
     CONSTRAINT fk_exam_semester FOREIGN KEY (semester_id) REFERENCES semesters(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==========================================
 -- TABLE: attendances
--- ==========================================
 CREATE TABLE IF NOT EXISTS attendances (
     id           BIGINT AUTO_INCREMENT PRIMARY KEY,
     student_id   BIGINT       NOT NULL,
@@ -81,19 +68,14 @@ CREATE TABLE IF NOT EXISTS attendances (
     CONSTRAINT uq_attendance_student_schedule_date UNIQUE (student_id, schedule_id, date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==========================================
--- MODIFY: scores (Add semester_id to track scores by semester)
--- Note: Requires caution on existing data! We will add it as nullable first.
--- ==========================================
+-- ALTER scores: add semester_id column (nullable) and unique constraint change
 ALTER TABLE scores ADD COLUMN semester_id BIGINT NULL;
 ALTER TABLE scores ADD CONSTRAINT fk_score_semester FOREIGN KEY (semester_id) REFERENCES semesters(id) ON DELETE SET NULL;
--- Drop existing unique constraint and recreate it to include semester_id
-ALTER TABLE scores DROP INDEX uq_student_subject;
-ALTER TABLE scores ADD CONSTRAINT uq_student_subject_semester UNIQUE (student_id, subject_id, semester_id);
+-- Drop and recreate unique constraint to include semester
+DROP INDEX uq_student_subject ON scores;
+CREATE UNIQUE INDEX uq_student_subject_semester ON scores(student_id, subject_id, semester_id);
 
--- ==========================================
 -- INDEXES
--- ==========================================
 CREATE INDEX idx_semester_year     ON semesters(academic_year_id);
 CREATE INDEX idx_schedule_class    ON schedules(class_id);
 CREATE INDEX idx_schedule_subject  ON schedules(subject_id);

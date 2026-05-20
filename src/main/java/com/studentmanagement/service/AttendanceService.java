@@ -27,7 +27,17 @@ public class AttendanceService {
     @Inject
     ScheduleRepository scheduleRepository;
 
-    public List<AttendanceResponse> getAll() {
+    public List<AttendanceResponse> getAll(Long studentId, Long scheduleId) {
+        if (studentId != null && scheduleId != null) {
+            return repository.list("student.id = ?1 and schedule.id = ?2", studentId, scheduleId)
+                    .stream().map(AttendanceResponse::new).collect(Collectors.toList());
+        } else if (studentId != null) {
+            return repository.list("student.id", studentId)
+                    .stream().map(AttendanceResponse::new).collect(Collectors.toList());
+        } else if (scheduleId != null) {
+            return repository.list("schedule.id", scheduleId)
+                    .stream().map(AttendanceResponse::new).collect(Collectors.toList());
+        }
         return repository.findAll().stream()
                 .map(AttendanceResponse::new)
                 .collect(Collectors.toList());

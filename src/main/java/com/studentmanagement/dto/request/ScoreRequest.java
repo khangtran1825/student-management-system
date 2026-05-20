@@ -12,6 +12,8 @@ public class ScoreRequest {
     @NotNull(message = "Subject ID is required")
     public Long subjectId;
 
+    public Long semesterId;
+
     @NotNull(message = "Midterm score is required")
     @DecimalMin(value = "0.0", message = "Midterm score must be at least 0")
     @DecimalMax(value = "10.0", message = "Midterm score must not exceed 10")
