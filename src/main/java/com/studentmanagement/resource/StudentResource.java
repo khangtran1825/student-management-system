@@ -32,14 +32,34 @@ public class StudentResource {
     UserRepository userRepository;
 
     @GET
+    @Path("/me")
+    @RolesAllowed({"STUDENT"})
+    @Operation(summary = "Lấy hồ sơ sinh viên hiện tại", description = "Sinh viên chỉ xem hồ sơ của chính mình")
+    @APIResponse(responseCode = "200", description = "Thành công")
+    public ApiResponse<StudentResponse> getMe(@Context SecurityContext sec) {
+        String username = sec.getUserPrincipal() != null ? sec.getUserPrincipal().getName() : null;
+        if (username == null) {
+            throw new BusinessException("Không xác định được người dùng hiện tại");
+        }
+
+        User user = userRepository.find("username", username).firstResult();
+        if (user == null || user.student == null) {
+            throw new BusinessException("Không tìm thấy hồ sơ sinh viên của tài khoản này");
+        }
+
+        return ApiResponse.success(studentService.getById(user.student.id));
+    }
+
+    @GET
     @RolesAllowed({"ADMIN", "TEACHER"})
     @Operation(summary = "Tìm kiếm và phân trang sinh viên", description = "Dành cho Admin và Teacher")
     @APIResponse(responseCode = "200", description = "Thành công")
     public ApiResponse<PageResponse<StudentResponse>> search(
             @QueryParam("keyword") String keyword,
+            @QueryParam("classId") Long classId,
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("size") @DefaultValue("10") int size) {
-        return ApiResponse.success(studentService.searchStudents(keyword, page, size));
+        return ApiResponse.success(studentService.searchStudents(keyword, classId, page, size));
     }
 
     @GET

@@ -2,8 +2,11 @@
 package com.studentmanagement.resource;
 
 import com.studentmanagement.dto.request.ScoreRequest;
+import com.studentmanagement.dto.request.ScoreBatchRequest;
 import com.studentmanagement.dto.response.ApiResponse;
 import com.studentmanagement.dto.response.ScoreResponse;
+import com.studentmanagement.dto.response.ClassScoreResponse;
+import com.studentmanagement.entity.Student;
 import com.studentmanagement.entity.User;
 import com.studentmanagement.exception.BusinessException;
 import com.studentmanagement.repository.UserRepository;
@@ -54,6 +57,25 @@ public class ScoreResource {
     }
 
     @GET
+    @Path("/me")
+    @RolesAllowed({"STUDENT"})
+    @Operation(summary = "Lấy điểm số của sinh viên hiện tại")
+    @APIResponse(responseCode = "200", description = "Thành công")
+    public ApiResponse<List<ScoreResponse>> getMyScores(@Context SecurityContext sec) {
+        String username = sec.getUserPrincipal() != null ? sec.getUserPrincipal().getName() : null;
+        if (username == null) {
+            throw new BusinessException("Không xác định được người dùng hiện tại");
+        }
+
+        User user = userRepository.find("username", username).firstResult();
+        if (user == null || user.student == null) {
+            throw new BusinessException("Không tìm thấy hồ sơ sinh viên của tài khoản này");
+        }
+
+        return ApiResponse.success(scoreService.getScoresByStudentId(user.student.id));
+    }
+
+    @GET
     @Path("/student/{studentId}")
     @RolesAllowed({"ADMIN", "TEACHER", "STUDENT"})
     @Operation(summary = "Xem điểm số theo mã ID sinh viên", description = "Sinh viên chỉ được truyền đúng ID của chính mình")
@@ -67,6 +89,45 @@ public class ScoreResource {
             }
         }
         return ApiResponse.success(scoreService.getScoresByStudentId(studentId));
+    }
+
+    @GET
+    @Path("/class/subject/{subjectId}/semester/{semesterId}")
+    @RolesAllowed({"STUDENT"})
+    @Operation(summary = "Xem điểm số cả lớp cho môn học và kỳ học hiện tại của sinh viên")
+    @APIResponse(responseCode = "200", description = "Thành công")
+    public ApiResponse<List<ScoreResponse>> getClassScores(
+            @PathParam("subjectId") Long subjectId,
+            @PathParam("semesterId") Long semesterId,
+            @Context SecurityContext sec) {
+        String username = sec.getUserPrincipal().getName();
+        User user = userRepository.find("username", username).firstResult();
+        if (user == null || user.student == null || user.student.classEntity == null) {
+            throw new BusinessException("Không tìm thấy thông tin lớp của sinh viên.");
+        }
+        return ApiResponse.success(scoreService.getScoresByClassSubjectAndSemester(user.student.classEntity.id, subjectId, semesterId));
+    }
+
+    @GET
+    @Path("/teacher/class/{classId}/subject/{subjectId}/semester/{semesterId}")
+    @RolesAllowed({"ADMIN", "TEACHER"})
+    @Operation(summary = "Lấy điểm số cả lớp cho giảng viên")
+    @APIResponse(responseCode = "200", description = "Thành công")
+    public ApiResponse<List<ClassScoreResponse>> getClassScoresForTeacher(
+            @PathParam("classId") Long classId,
+            @PathParam("subjectId") Long subjectId,
+            @PathParam("semesterId") Long semesterId) {
+        return ApiResponse.success(scoreService.getClassScoresForTeacher(classId, subjectId, semesterId));
+    }
+
+    @POST
+    @Path("/batch")
+    @RolesAllowed({"ADMIN", "TEACHER"})
+    @Operation(summary = "Nhập điểm hàng loạt cho sinh viên")
+    @APIResponse(responseCode = "200", description = "Nhập điểm thành công")
+    public ApiResponse<Void> enterBatchScores(@Valid ScoreBatchRequest request) {
+        scoreService.saveBatchScores(request);
+        return ApiResponse.success("Lưu điểm thành công", null);
     }
 
     @POST

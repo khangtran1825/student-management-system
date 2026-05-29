@@ -21,6 +21,22 @@ public class StudentRepository implements PanacheRepository<Student> {
                 .list();
     }
 
+    public List<Student> findByNameOrCodeAndClassId(String keyword, Long classId, int page, int size) {
+        String query = "(lower(fullName) like :keyword or lower(studentCode) like :keyword) and classEntity.id = :classId";
+        String likeKeyword = "%" + keyword.toLowerCase() + "%";
+
+        return find(query, Parameters.with("keyword", likeKeyword).and("classId", classId))
+                .page(Page.of(page, size))
+                .list();
+    }
+
+    public long countByNameOrCodeAndClassId(String keyword, Long classId) {
+        String query = "(lower(fullName) like :keyword or lower(studentCode) like :keyword) and classEntity.id = :classId";
+        String likeKeyword = "%" + keyword.toLowerCase() + "%";
+
+        return count(query, Parameters.with("keyword", likeKeyword).and("classId", classId));
+    }
+
     public long countByNameOrCode(String keyword) {
         String query = "lower(fullName) like :keyword or lower(studentCode) like :keyword";
         String likeKeyword = "%" + keyword.toLowerCase() + "%";

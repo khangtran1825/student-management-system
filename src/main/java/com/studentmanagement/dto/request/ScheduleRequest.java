@@ -10,8 +10,8 @@ public class ScheduleRequest {
     public Long classId;
     @NotNull
     public Long subjectId;
-    @NotBlank
-    public String teacherName;
+    @NotNull
+    public Long teacherId;
     @NotBlank
     public String room;
     @NotNull

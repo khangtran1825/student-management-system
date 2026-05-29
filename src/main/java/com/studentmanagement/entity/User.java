@@ -33,12 +33,19 @@ public class User extends PanacheEntityBase {
     @Column(name = "role", nullable = false)
     public String role;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "student_id")
     public Student student;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "teacher_id")
+    public Teacher teacher;
+
     @Column(name = "active", nullable = false)
     public Boolean active = true;
+
+    @Column(name = "must_change_password", nullable = false)
+    public Boolean mustChangePassword = true;
 
     @Column(name = "created_at", updatable = false)
     public LocalDateTime createdAt;

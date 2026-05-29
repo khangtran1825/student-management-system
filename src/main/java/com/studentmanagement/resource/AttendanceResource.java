@@ -3,7 +3,10 @@ package com.studentmanagement.resource;
 import com.studentmanagement.dto.request.AttendanceRequest;
 import com.studentmanagement.dto.response.ApiResponse;
 import com.studentmanagement.dto.response.AttendanceResponse;
+import com.studentmanagement.dto.response.ClassAttendanceResponse;
 import com.studentmanagement.service.AttendanceService;
+import java.time.LocalDate;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -24,6 +27,7 @@ public class AttendanceResource {
     AttendanceService service;
 
     @GET
+    @RolesAllowed({"ADMIN", "TEACHER"})
     @Operation(summary = "Lấy danh sách điểm danh", description = "Hỗ trợ lọc theo studentId và/hoặc scheduleId")
     @APIResponse(responseCode = "200", description = "Thành công")
     public ApiResponse<List<AttendanceResponse>> getAll(
@@ -34,6 +38,7 @@ public class AttendanceResource {
 
     @GET
     @Path("/{id}")
+    @RolesAllowed({"ADMIN", "TEACHER"})
     @Operation(summary = "Lấy thông tin điểm danh chi tiết theo ID")
     @APIResponse(responseCode = "200", description = "Thành công")
     @APIResponse(responseCode = "404", description = "Không tìm thấy dữ liệu điểm danh")
@@ -41,7 +46,20 @@ public class AttendanceResource {
         return ApiResponse.success(service.getById(id));
     }
 
+    @GET
+    @Path("/class/{classId}/schedule/{scheduleId}/date/{date}")
+    @RolesAllowed({"ADMIN", "TEACHER"})
+    @Operation(summary = "Lấy danh sách điểm danh theo lớp")
+    @APIResponse(responseCode = "200", description = "Thành công")
+    public ApiResponse<List<ClassAttendanceResponse>> getClassAttendance(
+            @PathParam("classId") Long classId,
+            @PathParam("scheduleId") Long scheduleId,
+            @PathParam("date") LocalDate date) {
+        return ApiResponse.success(service.getClassAttendance(classId, scheduleId, date));
+    }
+
     @POST
+    @RolesAllowed({"ADMIN", "TEACHER"})
     @Operation(summary = "Tạo mới điểm danh")
     @APIResponse(responseCode = "200", description = "Điểm danh thành công")
     @APIResponse(responseCode = "400", description = "Dữ liệu không hợp lệ")
@@ -51,6 +69,7 @@ public class AttendanceResource {
 
     @PUT
     @Path("/{id}")
+    @RolesAllowed({"ADMIN", "TEACHER"})
     @Operation(summary = "Cập nhật thông tin điểm danh")
     @APIResponse(responseCode = "200", description = "Cập nhật thành công")
     @APIResponse(responseCode = "404", description = "Không tìm thấy bản ghi")
@@ -60,6 +79,7 @@ public class AttendanceResource {
 
     @DELETE
     @Path("/{id}")
+    @RolesAllowed({"ADMIN", "TEACHER"})
     @Operation(summary = "Xóa điểm danh theo ID")
     @APIResponse(responseCode = "200", description = "Xóa thành công")
     @APIResponse(responseCode = "404", description = "Không tìm thấy bản ghi")

@@ -3,6 +3,7 @@ package com.studentmanagement.service;
 
 import com.studentmanagement.dto.request.LoginRequest;
 import com.studentmanagement.dto.request.RegisterRequest;
+import com.studentmanagement.dto.request.ChangePasswordRequest;
 import com.studentmanagement.dto.response.AuthResponse;
 import com.studentmanagement.entity.Student;
 import com.studentmanagement.entity.User;
@@ -40,10 +41,13 @@ public class AuthService {
         }
 
         String role = User.normalizeRole(user.role);
-        String token = tokenUtils.generateToken(user.username, role);
+        // include studentId as claim for convenience when available
+        Long studentIdClaim = (user.student != null) ? user.student.id : null;
+        String token = tokenUtils.generateToken(user.username, role, studentIdClaim);
 
-        Long studentId = user.student != null ? user.student.id : null;
-        return new AuthResponse(token, tokenUtils.getExpiry(), user.username, role, studentId);
+        // student is EAGER so safe to access directly
+        Long studentId = (user.student != null) ? user.student.id : null;
+        return new AuthResponse(token, tokenUtils.getExpiry(), user.username, role, studentId, user.mustChangePassword);
     }
 
     @Transactional
@@ -68,5 +72,19 @@ public class AuthService {
         }
 
         userRepository.persist(user);
+    }
+
+    @Transactional
+    public void changePassword(String username, ChangePasswordRequest request) {
+        User user = userRepository.find("username", username).firstResultOptional()
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng"));
+
+        if (!BcryptUtil.matches(request.currentPassword, user.password)) {
+            throw new BusinessException("Mật khẩu hiện tại không đúng");
+        }
+
+        user.password = BcryptUtil.bcryptHash(request.newPassword);
+        user.mustChangePassword = false;
+        userRepository.persistAndFlush(user);
     }
 }

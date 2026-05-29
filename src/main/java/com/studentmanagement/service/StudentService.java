@@ -38,10 +38,18 @@ public class StudentService {
         return mapToResponse(entity);
     }
 
-    public PageResponse<StudentResponse> searchStudents(String keyword, int page, int size) {
+    public PageResponse<StudentResponse> searchStudents(String keyword, Long classId, int page, int size) {
         String searchKeyword = (keyword == null) ? "" : keyword;
-        List<Student> students = studentRepository.findByNameOrCode(searchKeyword, page, size);
-        long totalElements = studentRepository.countByNameOrCode(searchKeyword);
+        List<Student> students;
+        long totalElements;
+
+        if (classId != null) {
+            students = studentRepository.findByNameOrCodeAndClassId(searchKeyword, classId, page, size);
+            totalElements = studentRepository.countByNameOrCodeAndClassId(searchKeyword, classId);
+        } else {
+            students = studentRepository.findByNameOrCode(searchKeyword, page, size);
+            totalElements = studentRepository.countByNameOrCode(searchKeyword);
+        }
 
         List<StudentResponse> content = students.stream()
                 .map(this::mapToResponse)
@@ -132,6 +140,14 @@ public class StudentService {
         entity.phone = request.phone;
         entity.address = request.address;
         entity.classEntity = classEntity;
+        
+        // Set username (use studentCode if not provided)
+        entity.username = request.username != null && !request.username.isEmpty() ? request.username : request.studentCode;
+        
+        // Hash and set password
+        if (request.password != null && !request.password.isEmpty()) {
+            entity.password = BcryptUtil.bcryptHash(request.password);
+        }
     }
 
     private StudentResponse mapToResponse(Student entity) {

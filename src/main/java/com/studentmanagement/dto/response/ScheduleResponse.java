@@ -7,7 +7,9 @@ public class ScheduleResponse {
     public Long id;
     public ClassResponse classEntity;
     public SubjectResponse subject;
+    public Long teacherId;
     public String teacherName;
+    public String teacherPhone;
     public String room;
     public String dayOfWeek;
     public LocalTime startTime;
@@ -21,7 +23,13 @@ public class ScheduleResponse {
         if (entity.subject != null) {
             this.subject = new SubjectResponse(entity.subject);
         }
-        this.teacherName = entity.teacherName;
+        if (entity.teacher != null) {
+            this.teacherId = entity.teacher.id;
+            this.teacherName = entity.teacher.fullName;
+            this.teacherPhone = entity.teacher.phone;
+        } else {
+            this.teacherName = entity.teacherName;
+        }
         this.room = entity.room;
         this.dayOfWeek = entity.dayOfWeek != null ? entity.dayOfWeek.name() : null;
         this.startTime = entity.startTime;

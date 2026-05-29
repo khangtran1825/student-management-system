@@ -26,8 +26,10 @@ public class Schedule extends PanacheEntityBase {
     @JoinColumn(name = "subject_id", nullable = false)
     public Subject subject;
 
-    @NotBlank
-    @Size(max = 100)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "teacher_id", nullable = false)
+    public Teacher teacher;
+
     @Column(name = "teacher_name", nullable = false, length = 100)
     public String teacherName;
 

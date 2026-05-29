@@ -5,6 +5,9 @@ import com.studentmanagement.dto.response.AttendanceResponse;
 import com.studentmanagement.entity.Attendance;
 import com.studentmanagement.entity.Schedule;
 import com.studentmanagement.entity.Student;
+import com.studentmanagement.dto.response.ClassAttendanceResponse;
+import java.time.LocalDate;
+import java.util.Map;
 import com.studentmanagement.exception.BusinessException;
 import com.studentmanagement.exception.ResourceNotFoundException;
 import com.studentmanagement.repository.AttendanceRepository;
@@ -40,6 +43,17 @@ public class AttendanceService {
         }
         return repository.findAll().stream()
                 .map(AttendanceResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<ClassAttendanceResponse> getClassAttendance(Long classId, Long scheduleId, LocalDate date) {
+        List<Student> students = studentRepository.list("classEntity.id", classId);
+        List<Attendance> attendances = repository.list("schedule.id = ?1 and date = ?2", scheduleId, date);
+        Map<Long, Attendance> attendanceMap = attendances.stream()
+                .collect(Collectors.toMap(a -> a.student.id, a -> a));
+
+        return students.stream()
+                .map(s -> new ClassAttendanceResponse(s, attendanceMap.get(s.id)))
                 .collect(Collectors.toList());
     }
 

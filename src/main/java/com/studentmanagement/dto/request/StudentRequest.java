@@ -40,4 +40,7 @@ public class StudentRequest {
     @NotBlank(message = "Password is required for user account creation")
     @Size(min = 6, max = 50, message = "Password must be between 6 and 50 characters")
     public String password;
+
+    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+    public String username; // Optional - if not provided, studentCode will be used as username
 }

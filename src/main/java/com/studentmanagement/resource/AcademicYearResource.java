@@ -4,6 +4,7 @@ import com.studentmanagement.dto.request.AcademicYearRequest;
 import com.studentmanagement.dto.response.AcademicYearResponse;
 import com.studentmanagement.dto.response.ApiResponse;
 import com.studentmanagement.service.AcademicYearService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -24,6 +25,7 @@ public class AcademicYearResource {
     AcademicYearService service;
 
     @GET
+    @RolesAllowed({"ADMIN", "TEACHER", "STUDENT"})
     @Operation(summary = "Lấy danh sách tất cả năm học")
     @APIResponse(responseCode = "200", description = "Thành công")
     public ApiResponse<List<AcademicYearResponse>> getAll() {
@@ -32,6 +34,7 @@ public class AcademicYearResource {
 
     @GET
     @Path("/{id}")
+    @RolesAllowed({"ADMIN", "TEACHER", "STUDENT"})
     @Operation(summary = "Lấy thông tin chi tiết năm học theo ID")
     @APIResponse(responseCode = "200", description = "Thành công")
     @APIResponse(responseCode = "404", description = "Không tìm thấy năm học")
@@ -40,6 +43,7 @@ public class AcademicYearResource {
     }
 
     @POST
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Tạo mới một năm học")
     @APIResponse(responseCode = "200", description = "Tạo mới thành công")
     @APIResponse(responseCode = "400", description = "Dữ liệu không hợp lệ")
@@ -49,6 +53,7 @@ public class AcademicYearResource {
 
     @PUT
     @Path("/{id}")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Cập nhật thông tin năm học")
     @APIResponse(responseCode = "200", description = "Cập nhật thành công")
     @APIResponse(responseCode = "404", description = "Không tìm thấy năm học")
@@ -58,6 +63,7 @@ public class AcademicYearResource {
 
     @DELETE
     @Path("/{id}")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Xóa năm học theo ID")
     @APIResponse(responseCode = "200", description = "Xóa thành công")
     @APIResponse(responseCode = "404", description = "Không tìm thấy năm học")

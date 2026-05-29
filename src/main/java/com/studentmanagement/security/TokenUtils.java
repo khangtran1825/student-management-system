@@ -19,14 +19,23 @@ public class TokenUtils {
     Long expiry;
 
     public String generateToken(String username, String role) {
+        return generateToken(username, role, null);
+    }
+
+    public String generateToken(String username, String role, Long studentId) {
         Set<String> roles = new HashSet<>();
         roles.add(role);
 
-        return Jwt.issuer(issuer)
-                .upn(username)
-                .groups(roles)
-                .expiresIn(Duration.ofSeconds(expiry))
-                .sign();
+        var builder = Jwt.issuer(issuer)
+            .upn(username)
+            .groups(roles)
+            .expiresIn(Duration.ofSeconds(expiry));
+
+        if (studentId != null) {
+            builder.claim("studentId", studentId);
+        }
+
+        return builder.sign();
     }
 
     public Long getExpiry() {

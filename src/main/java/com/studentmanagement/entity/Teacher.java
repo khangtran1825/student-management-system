@@ -1,18 +1,18 @@
 package com.studentmanagement.entity;
 
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
-@Table(name = "students")
-public class Student extends PanacheEntityBase {
+@Table(name = "teachers")
+public class Teacher extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,8 +20,8 @@ public class Student extends PanacheEntityBase {
 
     @NotBlank
     @Size(max = 20)
-    @Column(name = "student_code", nullable = false, unique = true, length = 20)
-    public String studentCode;
+    @Column(name = "teacher_code", nullable = false, unique = true, length = 20)
+    public String teacherCode;
 
     @NotBlank
     @Size(max = 100)
@@ -34,7 +34,6 @@ public class Student extends PanacheEntityBase {
     public Gender gender;
 
     @NotNull
-    @Past
     @Column(name = "date_of_birth", nullable = false)
     public LocalDate dateOfBirth;
 
@@ -45,35 +44,18 @@ public class Student extends PanacheEntityBase {
     public String email;
 
     @Size(max = 15)
-    @Pattern(regexp = "^[0-9]{10,15}$", message = "Phone number must be 10-15 digits")
     @Column(name = "phone", length = 15)
     public String phone;
 
-    @Size(max = 255)
-    @Column(name = "address", length = 255)
-    public String address;
-
-    @Size(min = 3, max = 50)
-    @Column(name = "username", length = 50, unique = true)
-    public String username;
-
-    @Size(min = 6, max = 255)
-    @Column(name = "password", length = 255)
-    public String password;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "class_id", nullable = false)
-    public ClassEntity classEntity;
+    @Size(max = 150)
+    @Column(name = "department", length = 150)
+    public String department;
 
     @Column(name = "created_at", updatable = false)
     public LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     public LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "student", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonIgnore
-    public List<Score> scores;
 
     @PrePersist
     protected void onCreate() {

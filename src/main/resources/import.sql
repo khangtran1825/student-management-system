@@ -1,0 +1,2 @@
+-- Intentionally left blank.
+-- Application data is initialized by DataInitializer and Flyway migrations.

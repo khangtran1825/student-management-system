@@ -2,6 +2,7 @@ package com.studentmanagement.dto.response;
 
 import com.studentmanagement.entity.Exam;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ExamResponse {
     public Long id;
@@ -9,6 +10,7 @@ public class ExamResponse {
     public SemesterResponse semester;
     public LocalDateTime examDate;
     public String room;
+    public List<String> classNames;
 
     public ExamResponse(Exam entity) {
         this.id = entity.id;
@@ -20,5 +22,10 @@ public class ExamResponse {
         }
         this.examDate = entity.examDate;
         this.room = entity.room;
+    }
+
+    public ExamResponse(Exam entity, List<String> classNames) {
+        this(entity);
+        this.classNames = classNames;
     }
 }

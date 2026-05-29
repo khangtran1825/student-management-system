@@ -22,26 +22,32 @@ public class DataInitializer {
     public void onStart(@Observes StartupEvent ev) {
         LOG.info("Running DataInitializer...");
         try {
-            ensureAdminUser();
+            ensureDefaultUsers();
         } catch (Exception e) {
             LOG.error("DataInitializer failed", e);
         }
     }
 
-    private void ensureAdminUser() {
-        var existing = userRepository.find("username", "admin").firstResultOptional();
+    private void ensureDefaultUsers() {
+        createUserIfNotExists("admin", "admin123", "admin@student-management.local", "ADMIN");
+        createUserIfNotExists("teacher", "teacher123", "teacher@student-management.local", "TEACHER");
+        createUserIfNotExists("student", "student123", "student@student-management.local", "STUDENT");
+    }
+
+    private void createUserIfNotExists(String username, String password, String email, String role) {
+        var existing = userRepository.find("username", username).firstResultOptional();
         if (existing.isPresent()) {
-            LOG.info("Admin user already exists, skipping creation.");
+            LOG.info("User " + username + " already exists, skipping creation.");
             return;
         }
 
-        User admin = new User();
-        admin.username = "admin";
-        admin.password = BcryptUtil.bcryptHash("admin123");
-        admin.email = "admin@student-management.local";
-        admin.role = "ADMIN";
-        admin.active = true;
-        userRepository.persistAndFlush(admin);
-        LOG.info("Default admin user created: username=admin, password=admin123");
+        User user = new User();
+        user.username = username;
+        user.password = BcryptUtil.bcryptHash(password);
+        user.email = email;
+        user.role = role;
+        user.active = true;
+        userRepository.persistAndFlush(user);
+        LOG.info("Default user created: username=" + username + ", password=" + password + ", role=" + role);
     }
 }

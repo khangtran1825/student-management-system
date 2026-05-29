@@ -2,7 +2,9 @@
 package com.studentmanagement.service;
 
 import com.studentmanagement.dto.request.ScoreRequest;
+import com.studentmanagement.dto.request.ScoreBatchRequest;
 import com.studentmanagement.dto.response.ScoreResponse;
+import com.studentmanagement.dto.response.ClassScoreResponse;
 import com.studentmanagement.entity.Score;
 import com.studentmanagement.entity.Student;
 import com.studentmanagement.entity.Semester;
@@ -20,6 +22,7 @@ import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -53,6 +56,72 @@ public class ScoreService {
                 .filter(score -> semesterId == null || (score.semester != null && score.semester.id.equals(semesterId)))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    public List<ScoreResponse> getScoresByClassSubjectAndSemester(Long classId, Long subjectId, Long semesterId) {
+        return scoreRepository.listAll().stream()
+                .filter(score -> score.student != null && score.student.classEntity != null && score.student.classEntity.id.equals(classId))
+                .filter(score -> score.subject != null && score.subject.id.equals(subjectId))
+                .filter(score -> score.semester != null && score.semester.id.equals(semesterId))
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<ClassScoreResponse> getClassScoresForTeacher(Long classId, Long subjectId, Long semesterId) {
+        List<Student> students = studentRepository.list("classEntity.id", classId);
+        List<Score> scores = scoreRepository.list("subject.id = ?1 and semester.id = ?2", subjectId, semesterId);
+        
+        Map<Long, Score> scoreMap = scores.stream()
+                .filter(s -> s.student != null)
+                .collect(Collectors.toMap(s -> s.student.id, s -> s));
+
+        return students.stream()
+                .map(s -> {
+                    Score score = scoreMap.get(s.id);
+                    String grade = score != null ? calculateGrade(score.averageScore) : null;
+                    return new ClassScoreResponse(s, score, grade);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void saveBatchScores(ScoreBatchRequest batchRequest) {
+        Subject subject = subjectRepository.findByIdOptional(batchRequest.subjectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy môn học với ID: " + batchRequest.subjectId));
+
+        Semester semester = semesterRepository.findByIdOptional(batchRequest.semesterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy học kỳ với ID: " + batchRequest.semesterId));
+
+        for (ScoreRequest req : batchRequest.scores) {
+            if (req.studentId == null) continue;
+            
+            Student student = studentRepository.findByIdOptional(req.studentId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sinh viên với ID: " + req.studentId));
+
+            // Check if score exists
+            Score score = scoreRepository.find("student.id = ?1 and subject.id = ?2 and semester.id = ?3", 
+                    req.studentId, batchRequest.subjectId, batchRequest.semesterId).firstResult();
+
+            if (score != null) {
+                // Update
+                score.midtermScore = req.midtermScore;
+                score.finalScore = req.finalScore;
+                score.calculateAverage();
+            } else {
+                // Ignore empty submissions
+                if (req.midtermScore == null && req.finalScore == null) continue;
+                
+                // Create
+                score = new Score();
+                score.student = student;
+                score.subject = subject;
+                score.semester = semester;
+                score.midtermScore = req.midtermScore;
+                score.finalScore = req.finalScore;
+                score.calculateAverage();
+                scoreRepository.persist(score);
+            }
+        }
     }
 
     @Transactional
